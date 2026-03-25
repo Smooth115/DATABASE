@@ -1,0 +1,13 @@
+# Agent and Copilot-specific files (account-specific, not needed for forks)
+.github/agents/
+.github/copilot/
+.github/copilot-instructions.md
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+
+# Editor artifacts
+*.swp
+*.swo
+*~
