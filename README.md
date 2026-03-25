@@ -10,6 +10,7 @@ A collection of markdown documents, logs, investigations, and information relate
 | `investigations/` | Case-based investigation documents and write-ups |
 | `logs/` | Raw and annotated log files from malware analysis |
 | `reports/` | Analysis reports, summaries, and findings |
+| `history/` | Chronological timeline of events, battles, and milestones |
 
 ## Usage
 
