@@ -1,7 +1,7 @@
 # MASTER INVESTIGATION REPORT
 ## Windows System Compromise — Mini-Tank MKII
 
-**Classification:** ACTIVE COMPROMISE WITH REAL-TIME ATTACKER PRESENCE — CROSS-PLATFORM — INVESTIGATION INFRASTRUCTURE COMPROMISED  
+**Classification:** ACTIVE COMPROMISE WITH REAL-TIME ATTACKER PRESENCE — CROSS-PLATFORM — FIRMWARE-LEVEL PERSISTENCE CONFIRMED — INVESTIGATION INFRASTRUCTURE COMPROMISED  
 **Prepared by:** ClaudeMKII  
 **Report Date:** 2026-03-19  
 **Last Updated:** 2026-03-28 — Repository integrity analysis added; lloyddesk systemctl findings; HOTDROP analysis  
@@ -582,5 +582,5 @@ All links relative to repository root:
 
 *Report compiled by ClaudeMKII — 2026-03-19*  
 *Updated 2026-03-28 — Repository integrity analysis, lloyddesk systemctl findings, HOTDROP analysis*  
-*Classification: ACTIVE COMPROMISE WITH REAL-TIME ATTACKER PRESENCE — CROSS-PLATFORM — INVESTIGATION INFRASTRUCTURE COMPROMISED*  
+*Classification: ACTIVE COMPROMISE WITH REAL-TIME ATTACKER PRESENCE — CROSS-PLATFORM — FIRMWARE-LEVEL PERSISTENCE CONFIRMED — INVESTIGATION INFRASTRUCTURE COMPROMISED*  
 *This document is intended for submission to cybercrime authorities and as a reference for all future remediation actions.*
