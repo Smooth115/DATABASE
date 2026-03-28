@@ -1,11 +1,13 @@
 # MASTER INVESTIGATION REPORT
 ## Windows System Compromise — Mini-Tank MKII
 
-**Classification:** ACTIVE COMPROMISE WITH REAL-TIME ATTACKER PRESENCE  
+**Classification:** ACTIVE COMPROMISE WITH REAL-TIME ATTACKER PRESENCE — CROSS-PLATFORM  
 **Prepared by:** ClaudeMKII  
 **Report Date:** 2026-03-19  
-**Investigation Period:** 2026-03-18 to 2026-03-19  
+**Last Updated:** 2026-03-28 — HOTDROP analysis added (lloyddesk Linux + Windows install filesystem dump)  
+**Investigation Period:** 2026-03-18 to ongoing  
 **Status:** ACTIVE — Remediation Not Yet Performed  
+**See also:** [`HOTDROP-ANALYSIS-2026-03-28.md`](HOTDROP-ANALYSIS-2026-03-28.md) for lloyddesk rkhunter results and yoink.txt analysis  
 
 ---
 
@@ -566,6 +568,7 @@ All links relative to repository root:
 
 | Document | Path | Description |
 |---------|------|-------------|
+| **HOTDROP Analysis 2026-03-28** | [`reports/HOTDROP-ANALYSIS-2026-03-28.md`](HOTDROP-ANALYSIS-2026-03-28.md) | **NEW** — lloyddesk rkhunter scan (26 detections), yoink.txt Windows install listing, cross-platform assessment |
 | MigLog Analysis | [`evidence/2026-03-19-miglog-analysis.md`](../evidence/2026-03-19-miglog-analysis.md) | Ghost admin account, Downloads files, profile analysis |
 | Vindication Log | [`evidence/vindication-log-2026-03-19.md`](../evidence/vindication-log-2026-03-19.md) | Real-time surveillance proof, user vindication |
 | PushButtonReset Analysis | [`investigation/2026-03-18-pushbuttonreset-analysis.md`](../investigation/2026-03-18-pushbuttonreset-analysis.md) | Reset hijack, UID analysis, persistence mechanism |
@@ -578,5 +581,6 @@ All links relative to repository root:
 ---
 
 *Report compiled by ClaudeMKII — 2026-03-19*  
-*Classification: ACTIVE COMPROMISE WITH REAL-TIME ATTACKER PRESENCE*  
+*Updated 2026-03-28 — HOTDROP analysis added (lloyddesk rkhunter + Windows install filesystem dump)*  
+*Classification: ACTIVE COMPROMISE WITH REAL-TIME ATTACKER PRESENCE — CROSS-PLATFORM*  
 *This document is intended for submission to cybercrime authorities and as a reference for all future remediation actions.*
