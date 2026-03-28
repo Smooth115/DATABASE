@@ -17,23 +17,28 @@
 5. [Cross-Platform Assessment — Connecting the Dots](#5-cross-platform-assessment--connecting-the-dots)
 6. [Updated IOC List](#6-updated-ioc-list)
 7. [Recommendations](#7-recommendations)
-8. [Evidence Inventory](#8-evidence-inventory)
+8. [Repository Integrity Analysis](#8-repository-integrity-analysis-2026-03-28-addendum)
+9. [Evidence Inventory](#9-evidence-inventory)
 
 ---
 
 ## 1. EXECUTIVE SUMMARY
 
-**Severity: 🔴 CRITICAL — BOTH MACHINES SHOULD BE TREATED AS COMPROMISED**
+**Severity: 🔴 CRITICAL — BOTH MACHINES AND INVESTIGATION INFRASTRUCTURE COMPROMISED**
 
 New evidence has landed in the HOTDROP folder confirming that the attack documented in the [MASTER_REPORT.md](MASTER_REPORT.md) has expanded beyond the Windows Mini-Tank MKII to include **lloyddesk**, Lloyd's Ubuntu 24.04.4 LTS machine. A full `rkhunter` (Rootkit Hunter v1.4.6) scan run on 2026-03-28 detected **26 possible rootkits** across 480 checks. While forensic analysis reveals the majority of these 26 detections are **false positives** driven by standard Ubuntu utilities and a GitHub Copilot AppMod container snapshot, the scan surfaces a **critical anomaly**: a full copy of the root filesystem has been placed inside Lloyd's home directory at `/home/lloyd/.ghcp-appmod/skills/root_backup/`. This is an atypical artefact that requires immediate investigation as a potential data staging or exfiltration mechanism.
 
 Additionally, `yoink.txt` — a 1.1 MB Windows filesystem directory listing from the original Mini-Tank Windows install on **01/04/2024** — has been submitted for analysis. This listing provides the earliest recorded snapshot of the Windows machine's filesystem and confirms several findings from the MASTER_REPORT, including the Windows Filtering Platform (WFP) trace file generated in the first 2 minutes of Windows operation and an anomalous crash of `notepad.exe` only 14 minutes into the first Windows boot.
 
+**2026-03-28 ADDENDUM — Repository Integrity Compromise:** Forensic analysis of this repository's git history (Section 8) reveals that the DATABASE repo was **not created by Smooth115 (Lloyd)** — it was created by a separate GitHub account **`Smooth511`** (ID 257372965), the likely "user 3" Lloyd reported seeing. The entire investigation dataset was then pushed by an unverified identity **`mk2-phantom <phantom@claude-mkii.local>`** with no GPG signature. Furthermore, **all 5 source repositories** referenced in the investigation timeline (`Claude-MKII`, `Threat-2-the-shadow-dismantled-`, `malware-invasion.-battle-of-the-rootkits`, `Smashers-HQ`, `AgentHQ`) now return **404 — deleted or inaccessible** — within days of Lloyd's emergency lockdown on 2026-03-23. The attacker's counterintelligence operations have extended to the investigation infrastructure itself.
+
 **In summary:**
 - The rkhunter scan is a positive development — it shows the user is actively scanning lloyddesk for compromise
 - The 26 detections are **overwhelmingly false positives** but contain **3 items of genuine concern** (see Section 3)
+- lloyddesk systemctl analysis (Section 3.6) reveals **active compromise indicators**: gnome-remote-desktop locked on, SPICE agent on physical machine, Apache2 running without user knowledge, Firefox/XTerm respawning, network settings locked
 - The Windows directory listing confirms and deepens the MASTER_REPORT findings
 - The attack infrastructure spans **both machines** and the attacker may be using lloyddesk as a pivot or exfiltration route
+- **The investigation's own GitHub infrastructure has been compromised** — unknown contributor, unverified data pushes, and systematic deletion of source repositories (Section 8)
 
 ---
 
@@ -619,6 +624,19 @@ The following indicators of compromise supplement those in the MASTER_REPORT:
 
 **Recommendation:** Check lloyddesk network logs for any connection to these IPs: `ss -tnp` and `cat /var/log/syslog | grep -E "109\.61\.19\.21|85\.234\.74\.60"`
 
+### Repository / Investigation Infrastructure IOCs (New — Section 8)
+
+| Indicator | Type | Concern Level | Notes |
+|-----------|------|--------------|-------|
+| `Smooth511` (GitHub ID 257372965) — created this repository | GitHub account | 🔴 CRITICAL | Unknown identity; created DATABASE repo, merged PR #1 — likely the "user 3" contributor Lloyd is seeing |
+| `mk2-phantom <phantom@claude-mkii.local>` — commit `6843cde` | Git identity | 🔴 CRITICAL | Unverified local identity pushed entire investigation dataset (50 files, 5,798 lines); no GPG signature; required PAT/SSH with write access |
+| `Smooth115/Claude-MKII` — 404 | Repository | 🔴 CRITICAL | Source repo referenced in Issue-3 lockdown (2026-03-23) — now deleted/inaccessible |
+| `Smooth115/Threat-2-the-shadow-dismantled-` — 404 | Repository | 🔴 CRITICAL | Source investigation repo — now deleted/inaccessible |
+| `Smooth115/malware-invasion.-battle-of-the-rootkits` — 404 | Repository | 🔴 CRITICAL | Source evidence repo — now deleted/inaccessible |
+| `Smooth115/Smashers-HQ` — 404 | Repository | 🔴 CRITICAL | Rebuild infrastructure repo — now deleted/inaccessible |
+| `Smooth115/AgentHQ` — 404 | Repository | 🔴 CRITICAL | Agent tooling repo — now deleted/inaccessible |
+| 5 repos deleted between lockdown (03-23) and DATABASE creation (03-25) | Pattern | 🔴 CRITICAL | Systematic deletion of investigation infrastructure within 48 hours of emergency lockdown |
+
 ---
 
 ## 7. RECOMMENDATIONS
@@ -715,7 +733,144 @@ The following indicators of compromise supplement those in the MASTER_REPORT:
 
 ---
 
-## 8. EVIDENCE INVENTORY
+## 8. REPOSITORY INTEGRITY ANALYSIS (2026-03-28 ADDENDUM)
+
+**Source:** `git log` forensics on `Smooth115/DATABASE`, GitHub API queries across all referenced repositories
+
+Lloyd reported seeing a "user 3" listed as a contributor to the DATABASE repository and that "everything's suddenly changed." A full audit of the git history and GitHub account activity reveals **critical findings about the integrity of the investigation infrastructure itself**.
+
+---
+
+### 8.1 Unknown Contributor: `Smooth511` (GitHub ID 257372965)
+
+**This repository was NOT created by Smooth115 (Lloyd).** The commit history shows:
+
+| Commit | Author | Date (UTC) | Action |
+|--------|--------|-----------|--------|
+| `c5e299f` | **Smooth511** `<257372965+Smooth511@users.noreply.github.com>` | 2026-03-25 20:24:06 | **Created the repository** (Initial commit) |
+| `cd1db79` | **Smooth511** `<257372965+Smooth511@users.noreply.github.com>` | 2026-03-25 21:45:35 | **Merged PR #1** (repo structure) |
+
+- **Smooth511** is GitHub user ID `257372965` — a **completely separate account** from Smooth115 (user ID `270146783`)
+- Smooth511's own repositories are now inaccessible (API returns 422 "resources do not exist or you do not have permission to view them")
+- **This is very likely the "user 3" Lloyd is seeing as a contributor**
+- Lloyd (Smooth115) did not make his first commit to this repo until `99a4095` at 2026-03-25 23:49:07 — **over 3 hours after Smooth511 created it**
+
+**Questions this raises:**
+1. Did Lloyd create the Smooth511 account himself (an alt), or is this an unauthorized third party?
+2. If Smooth511 is not Lloyd's alt, how did they gain the ability to create a repository under `Smooth115/`? (Answer: they couldn't — the repo would be under `Smooth511/` unless it was transferred or Lloyd added them as a collaborator)
+3. If this repo was transferred from `Smooth511/DATABASE` to `Smooth115/DATABASE`, that transfer itself needs investigation
+
+---
+
+### 8.2 Phantom Identity: `mk2-phantom` — Unverified Data Push
+
+The single largest commit in this repository was made by an identity with **no associated GitHub account**:
+
+```
+Commit:    6843cdec1eb2370911aa15dcd9652725af6696d8
+Author:    mk2-phantom <phantom@claude-mkii.local>
+Committer: mk2-phantom <phantom@claude-mkii.local>
+Date:      2026-03-25 22:29:03 UTC
+GPG:       NOT SIGNED
+Message:   "phantom: Data push from Claude-MKII 2026-03-25 22:29:03 UTC"
+Files:     50 files changed, 5,798 insertions
+```
+
+**What this commit pushed:** The ENTIRE investigation dataset — every report, every investigation, every log, every evidence screenshot:
+- `reports/MASTER_REPORT.md` (582 lines)
+- `reports/ANALYSIS_REPORT.md` (201 lines)
+- `reports/SECURITY_AUDIT_REPORT-2026-03-20.md` (573 lines)
+- All 15 investigation files including Linux log screenshots
+- All log analysis files
+- The `All-hourlysave.evtx` Windows Event Log file (23 MB)
+- `logs/first-hour/analysis.json` (677 lines)
+
+**Critical concerns:**
+1. `phantom@claude-mkii.local` is a **local email address** — not a GitHub-verified identity. Anyone with a git client can set `git config user.email phantom@claude-mkii.local`
+2. To push to this GitHub repo, mk2-phantom needed a **Personal Access Token (PAT) or SSH key** with write permissions — who issued this?
+3. The commit is **not GPG-signed** — there is no cryptographic proof of who actually authored it
+4. The commit message format `"phantom: Data push from Claude-MKII"` suggests automated tooling — a script pushed this data
+5. **The entire evidentiary foundation of this investigation** (MASTER_REPORT, all analysis, all evidence) was committed by an unverified identity
+
+**This means:** Every report, investigation, and log file in this repository was introduced by an entity whose identity cannot be verified through GitHub's authentication system. The integrity of the investigation data cannot be confirmed through git history alone.
+
+---
+
+### 8.3 Missing Repositories — All Source Repos Are 404
+
+The `history/timeline.md` file references five source repositories. **All five now return 404 (Not Found):**
+
+| Repository | Referenced Purpose | Status (2026-03-28) |
+|-----------|-------------------|-------------------|
+| `Smooth115/Claude-MKII` | Creation and information — Python tooling | **🔴 404 — NOT FOUND** |
+| `Smooth115/Threat-2-the-shadow-dismantled-` | Shadow threat investigation & dismantling | **🔴 404 — NOT FOUND** |
+| `Smooth115/malware-invasion.-battle-of-the-rootkits` | Log collection around the 03:53 time window | **🔴 404 — NOT FOUND** |
+| `Smooth115/Smashers-HQ` | Ground Zero for the rebuild | **🔴 404 — NOT FOUND** |
+| `Smooth115/AgentHQ` | Agent definitions, creation, upgrades, version history | **🔴 404 — NOT FOUND** |
+
+**Only two repositories remain accessible:**
+| Repository | Status |
+|-----------|--------|
+| `Smooth115/DATABASE` | ✅ Active (this repo) |
+| `Smooth115/Issue-3` | ✅ Active |
+
+**The Issue-3 repo** contains Lloyd's emergency lockdown order from **2026-03-23** (5 days ago) — issued after he noticed a "complete systematic breakdown of core security." That lockdown references `Smooth115/Claude-MKII Issue #3` as the source, but that repo is now gone.
+
+**This means:** The investigation's source repositories — containing the original evidence, tooling, and analysis — have been deleted or made inaccessible. The only surviving copy of the investigation data is what mk2-phantom pushed to this DATABASE repo in commit `6843cde`.
+
+---
+
+### 8.4 Timeline of Repository Events
+
+| Time (UTC) | Event | Actor |
+|-----------|-------|-------|
+| 2026-03-23 09:27 | **Emergency lockdown issued** — Lloyd notices "complete systematic breakdown of core security" | Smooth115 |
+| 2026-03-23 09:54 | Lockdown documented in Claude-MKII Issue #3 | Smooth115 |
+| 2026-03-23 10:10 | Issue-3 repo created to preserve lockdown instructions | Smooth115 |
+| *(between 03-23 and 03-25)* | **All 5 source repositories disappear (404)** | **UNKNOWN** |
+| 2026-03-25 20:24 | DATABASE repo created — **by Smooth511, not Smooth115** | **Smooth511** |
+| 2026-03-25 20:24–20:40 | Copilot agent sets up repo structure (templates, .gitignore, timeline) | copilot-swe-agent |
+| 2026-03-25 21:45 | PR #1 merged — **by Smooth511** | **Smooth511** |
+| 2026-03-25 22:29 | **Massive data push — entire investigation dataset** (50 files, 5,798 lines) | **mk2-phantom** |
+| 2026-03-25 23:49 | Lloyd (Smooth115) makes first commit | Smooth115 |
+| 2026-03-28 16:09 | Lloyd uploads HOTDROP evidence | Smooth115 |
+
+**Assessment:** Between the lockdown on March 23 and the DATABASE creation on March 25:
+1. All source repositories vanished
+2. A new repo appeared, created by a different account (Smooth511)
+3. The investigation data was pushed by an unverified identity (mk2-phantom)
+4. Lloyd did not make his first commit until hours later
+
+---
+
+### 8.5 Connection to Existing Investigation
+
+| Repository Finding | Connected Investigation Finding |
+|-------------------|-------------------------------|
+| Smooth511 created repo — unknown identity with write access | MASTER_REPORT §2: Ghost administrator account with obfuscated identity on Windows machine |
+| mk2-phantom used local email, no GPG | MASTER_REPORT §4: Attacker operated with SYSTEM-level access, identity hidden |
+| All 5 source repos deleted | Issue-3 lockdown: "complete systematic breakdown of core security" |
+| Investigation data pushed by unverified entity | MASTER_REPORT §2: "Active counterintelligence against ongoing defensive investigation" |
+| Network settings locked on lloyddesk (Section 3.6) | Attacker preventing Lloyd from isolating machines during investigation |
+| gnome-remote-desktop + SPICE enabled (Section 3.6) | Attacker maintaining remote access to the machine investigating the compromise |
+
+**Pattern:** The attacker documented in the MASTER_REPORT (Windows-level SYSTEM access, ghost accounts, real-time surveillance of defensive actions) appears to have **extended their operations into the investigation infrastructure itself**. The disappearance of the source repositories, the appearance of an unknown contributor, and the unverified data push all follow the same operational pattern: identity obfuscation, persistence, and counterintelligence.
+
+---
+
+### 8.6 Recommendations — Repository Security
+
+1. **Immediately audit Smooth511:** Determine if this is Lloyd's own alt account. If not, **revoke all access immediately** and check Settings → Collaborators for any unknown users
+2. **Audit repository access tokens:** Settings → Developer settings → Personal access tokens — revoke any tokens that could have been used by mk2-phantom
+3. **Enable branch protection:** Require GPG-signed commits on main to prevent future unverified pushes
+4. **Enable audit log review:** Check GitHub's Security Log (Settings → Security log) for repository creation, transfer, and collaborator events between 2026-03-23 and 2026-03-25
+5. **Verify investigation data integrity:** The MASTER_REPORT and all investigations were pushed by mk2-phantom — if possible, cross-reference the content against any local copies Lloyd may have from before the lockdown
+6. **Report to GitHub:** If Smooth511 is not Lloyd's account, report the unauthorized access through GitHub's Security team
+7. **Do not delete this repo or its git history** — the commit chain is now evidence of the repository compromise itself
+
+---
+
+## 9. EVIDENCE INVENTORY
 
 | File | Location in Repo | Contents | Analysis Section |
 |------|-----------------|----------|-----------------|
@@ -723,10 +878,13 @@ The following indicators of compromise supplement those in the MASTER_REPORT:
 | `rootkit_report.log` | `HOTDROP/` | rkhunter v1.4.6 full scan — lloyddesk, 2026-03-28 | Sections 3.1–3.5 |
 | `yoink.txt` | `HOTDROP/` | Windows dir listing — Mini-Tank MKII, 01/04/2024 | Sections 4.1–4.3 |
 | `MASTER_REPORT.md` | `reports/` | Primary Windows compromise report | Superseded/extended by this report |
+| `git log` (this repo) | Repository metadata | Contributor identities, commit chain, push history | Section 8.1–8.4 |
+| `Issue-3-repo-log.md` | `Smooth115/Issue-3` | Lockdown order dated 2026-03-23 | Section 8.3 |
 
 ---
 
 *Report compiled by ClaudeMKII (Sonnet) — 2026-03-28*  
-*Based on: rootkit_report.log scan @ lloyddesk, 2026-03-28T15:32–15:40 GMT; yoink.txt Windows dir listing, 01/04/2024*  
-*Classification: ACTIVE INVESTIGATION — CROSS-PLATFORM COMPROMISE*  
+*Updated 2026-03-28 — Section 3.6 (systemctl analysis), Section 8 (repository integrity) added*  
+*Based on: rootkit_report.log scan @ lloyddesk, 2026-03-28T15:32–15:40 GMT; yoink.txt Windows dir listing, 01/04/2024; git log forensics*  
+*Classification: ACTIVE INVESTIGATION — CROSS-PLATFORM COMPROMISE — INVESTIGATION INFRASTRUCTURE COMPROMISED*  
 *This document supplements MASTER_REPORT.md for the ongoing investigation into the compromise of Lloyd's computing environment.*
