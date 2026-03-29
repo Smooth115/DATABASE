@@ -1,4 +1,4 @@
-# 🔴 HOTDROP ANALYSIS REPORT — lloyddesk Linux Machine + Windows Install Filesystem Dump
+# 🔴 [NeedsVerify] HOTDROP ANALYSIS REPORT — lloyddesk Linux Machine + Windows Install Filesystem Dump
 
 **Classification:** ACTIVE INVESTIGATION — CROSS-PLATFORM COMPROMISE  
 **Prepared by:** ClaudeMKII (Sonnet)  
@@ -123,7 +123,7 @@ The following table provides the verdict for each of the 26 flagged rootkits:
 | 5 | **Devil RootKit** | `/usr/bin/pro`, `/usr/bin/clear` | 🟢 FALSE POSITIVE | `pro` is the Ubuntu Pro / Advantage management tool. `clear` is the terminal clear utility. Both are standard packages. |
 | 6 | **Dica-Kit Rootkit** | `/usr/lib/recovery-mode/options/clean`, `/usr/bin/write`, kernel `read` files | 🟢 FALSE POSITIVE | `/usr/lib/recovery-mode/options/clean` is part of Ubuntu's Recovery Mode menu. Not a rootkit file. |
 | 7 | **Dreams Rootkit** | `/usr/bin/top`, `/usr/bin/ps`, `/usr/bin/netstat`, `/usr/bin/ls`, `/usr/sbin/ifconfig`, plus ghcp-appmod backup copies | 🟢 FALSE POSITIVE | All standard Ubuntu utilities. The ghcp-appmod backup of these files generates duplicate matches. |
-| 8 | **Ebury backdoor** | `/usr/lib/x86_64-linux-gnu/libkeyutils.so.1` (found twice — once in system, once in ghcp-appmod backup) | 🟡 **LOW CONCERN — MONITOR** | Ebury is a sophisticated SSH credential-stealing backdoor. However, `libkeyutils.so.1` is a **legitimate kernel keyring library** shipped with Ubuntu. This is a **documented rkhunter false positive** for Ubuntu. The real Ebury check involves verifying the library's content and symbols — the DPKG SHA256 check showed 0 suspect files, so the library matches the package database. **Recommend verifying**: `dpkg -V keyutils` and comparing hash against known-good. |
+| 8 | **Ebury backdoor** | `/usr/lib/x86_64-linux-gnu/libkeyutils.so.1` (found twice — once in system, once in ghcp-appmod backup) | 🟡 **LOW CONCERN — MONITOR** | Ebury is a sophisticated SSH credential-stealing backdoor. However, `libkeyutils.so.1` is a **legitimate kernel keyring library** shipped with Ubuntu. This is a **documented rkhunter false positive** for Ubuntu. The real Ebury check involves verifying the library's content and symbols — the DPKG SHA256 check showed 0 suspect files, so the library matches the package database. **Recommend verifying**: `dpkg -V libkeyutils1` and comparing hash against known-good. |
 | 9 | **Fuck\`it Rootkit** | `/home/lloyd/.bashrc`, `/etc/skel/.bashrc`, `/root/.bashrc`, `/var/lib/pam/password`, `/usr/sbin/init` | 🟢 FALSE POSITIVE | All standard Ubuntu files. `.bashrc` is the standard shell init file. `pam/password` is the PAM password database. |
 | 10 | **Jynx Rootkit** | `/usr/bin/bc` (found 3× — system + ghcp-appmod backup twice) | 🟢 FALSE POSITIVE | `bc` is a standard arbitrary-precision calculator. The triple entry is from the ghcp-appmod container backup creating redundant copies. |
 | 11 | **Li0n Worm** | `/usr/share/bash-completion/completions/bind`, `/usr/bin/netstat` | 🟢 FALSE POSITIVE | `bind` completion script and netstat are standard Ubuntu components. |
@@ -155,7 +155,7 @@ The following table provides the verdict for each of the 26 flagged rootkits:
 
 ### 3.3 Genuine Concerns from the Scan
 
-Despite the false positive verdict on all 26, the scan surface three items that deserve follow-up:
+Despite the false positive verdict on all 26, the scan surfaced three items that deserve follow-up:
 
 #### ⚠️ CONCERN 1 — `/home/lloyd/.ghcp-appmod/skills/root_backup/` (MODERATE — INVESTIGATE)
 
@@ -186,7 +186,7 @@ Despite the false positive verdict on all 26, the scan surface three items that 
 
 **What to do:** Run once:
 ```bash
-dpkg -V keyutils
+dpkg -V libkeyutils1
 sha256sum /usr/lib/x86_64-linux-gnu/libkeyutils.so.1
 ```
 Compare against: `apt-cache show libkeyutils1` to verify the installed file matches the package database. The rkhunter DPKG SHA256 check already showed 0 suspect files, making genuine Ebury infection unlikely, but a quick manual confirmation is good practice given the active compromise context.
@@ -266,14 +266,25 @@ This is the **GNOME Remote Desktop** daemon — a VNC/RDP-over-PipeWire service 
 
 **Action required:**
 ```bash
-# Check who last modified the service configuration
+# Check who last modified the service configuration (system vs user unit)
 stat /etc/systemd/system/gnome-remote-desktop.service 2>/dev/null || \
 stat /usr/lib/systemd/user/gnome-remote-desktop.service
+
 # Check if credentials are stored
 ls -la ~/.local/share/gnome-remote-desktop/
+
 # Who is currently connected
 ss -tnp | grep -E ":3389|:5900|:5901"
-# Force disable
+
+# Determine whether the service is a system unit or a user unit
+systemctl list-unit-files | grep gnome-remote-desktop.service || true
+systemctl --user list-unit-files | grep gnome-remote-desktop.service || true
+
+# If it is a SYSTEM unit (listed without --user), disable and stop:
+sudo systemctl disable gnome-remote-desktop.service
+sudo systemctl stop gnome-remote-desktop.service
+
+# If it is a USER unit (listed under --user), disable and stop:
 systemctl --user disable gnome-remote-desktop.service
 systemctl --user stop gnome-remote-desktop.service
 ```
@@ -666,8 +677,15 @@ The following indicators of compromise supplement those in the MASTER_REPORT:
 
 ### Immediate Actions — lloyddesk
 
-0. **URGENT — Disable GNOME Remote Desktop (attacker remote access vector):**
+1. **URGENT — Disable GNOME Remote Desktop (attacker remote access vector):**
    ```bash
+   # Check both system and user scopes
+   systemctl list-unit-files | grep gnome-remote-desktop.service || true
+   systemctl --user list-unit-files | grep gnome-remote-desktop.service || true
+   # If SYSTEM unit:
+   sudo systemctl stop gnome-remote-desktop.service
+   sudo systemctl disable gnome-remote-desktop.service
+   # If USER unit:
    systemctl --user stop gnome-remote-desktop.service
    systemctl --user disable gnome-remote-desktop.service
    # If it immediately restarts, check for a watchdog:
@@ -675,7 +693,7 @@ The following indicators of compromise supplement those in the MASTER_REPORT:
    ss -tnp | grep -E ":3389|:5900|:5901"
    ```
 
-0. **URGENT — Investigate and remove SPICE agent (not expected on physical machine):**
+2. **URGENT — Investigate and remove SPICE agent (not expected on physical machine):**
    ```bash
    # First check: is this machine actually running inside a hypervisor?
    systemd-detect-virt
@@ -687,14 +705,14 @@ The following indicators of compromise supplement those in the MASTER_REPORT:
    grep -A5 "spice-vdagent" /var/log/apt/history.log
    ```
 
-0. **URGENT — Investigate Apache2 (not installed by user):**
+3. **URGENT — Investigate Apache2 (not installed by user):**
    ```bash
    curl -s http://localhost/
    tail -100 /var/log/apache2/access.log
    grep -A5 "apache2" /var/log/apt/history.log
    ```
 
-0. **URGENT — Investigate Firefox/XTerm respawning:**
+4. **URGENT — Investigate Firefox/XTerm respawning:**
    ```bash
    ls ~/.config/autostart/
    cat ~/.config/autostart/*.desktop 2>/dev/null
@@ -702,14 +720,14 @@ The following indicators of compromise supplement those in the MASTER_REPORT:
    crontab -l
    ```
 
-0. **URGENT — Check and unlock network settings:**
+5. **URGENT — Check and unlock network settings:**
    ```bash
    cat /etc/netplan/*.yaml
    lsattr /etc/netplan/*.yaml 2>/dev/null
    sysctl net.ipv6.conf.all.disable_ipv6
    ```
 
-
+6. **Investigate root filesystem copy in home directory:**
    ```bash
    ls -la ~/.ghcp-appmod/skills/root_backup/
    stat ~/.ghcp-appmod/skills/root_backup/rofs/etc/shadow 2>/dev/null
@@ -717,42 +735,42 @@ The following indicators of compromise supplement those in the MASTER_REPORT:
    ```
    If `/etc/shadow` was copied there, change all passwords on lloyddesk **from a clean machine** immediately.
 
-2. **Verify libkeyutils (Ebury false positive confirmation):**
+7. **Verify libkeyutils (Ebury false positive confirmation):**
    ```bash
-   dpkg -V keyutils
+   dpkg -V libkeyutils1
    sha256sum /usr/lib/x86_64-linux-gnu/libkeyutils.so.1
    ```
 
-3. **Check for C2 connections:**
+8. **Check for C2 connections:**
    ```bash
    ss -tnp | grep -E "109\.61\.19\.21|85\.234\.74\.60"
    grep -r "109\.61\.19\.21\|85\.234\.74\.60" /var/log/ 2>/dev/null
    ```
 
-4. **Verify no unexpected kernel modules:**
+9. **Verify no unexpected kernel modules:**
    ```bash
    lsmod | sort
    dmesg | grep -i "module loaded\|insmod\|modprobe" | tail -50
    ls -lt /lib/modules/$(uname -r)/kernel/ | head -20
    ```
 
-5. **Network isolation:** Until lloyddesk is cleared, do not use it on the same network as the Windows machine or any machine containing sensitive credentials.
+10. **Network isolation:** Until lloyddesk is cleared, do not use it on the same network as the Windows machine or any machine containing sensitive credentials.
 
 ### Actions for Windows Machine (Reinforcing MASTER_REPORT)
 
-6. **Do not use `$WINDOWS.~BT` staging for any reinstall.** The in-place upgrade source was likely already compromised. Any reinstall must use a **freshly downloaded ISO** verified by SHA256 against Microsoft's published hashes.
+11. **Do not use `$WINDOWS.~BT` staging for any reinstall.** The in-place upgrade source was likely already compromised. Any reinstall must use a **freshly downloaded ISO** verified by SHA256 against Microsoft's published hashes.
 
-7. **Investigate the WFP trace** (`wfpdiag.etl` from 07:40):
+12. **Investigate the WFP trace** (`wfpdiag.etl` from 07:40):
    - This file may be accessible in Windows Event Logs or on the Windows filesystem
    - WFP traces can reveal what network connections the attacker tested during the first boot
    - Tool: `netsh wfp show netevents` or parse the ETL with Windows Performance Analyzer
 
-8. **Correlate the notepad.exe crash** with event logs:
+13. **Correlate the notepad.exe crash** with event logs:
    - Check Windows Event Log: `Application` log around `01/04/2024 07:52`
    - Look for Event ID 1000 (Application Error) for `notepad.exe` with fault module `UNKNOWN` or an unexpected DLL
    - The WER hash `f2a41fe818ca88351957495f37d5ced18658230` may appear in VirusTotal
 
-9. **All other MASTER_REPORT recommendations remain active** — especially full wipe from clean external media, UEFI firmware check, and reporting to UK NCSC / Action Fraud.
+14. **All other MASTER_REPORT recommendations remain active** — especially full wipe from clean external media, UEFI firmware check, and reporting to UK NCSC / Action Fraud.
 
 ---
 
@@ -995,21 +1013,22 @@ The `history/timeline.md` file references five source repositories. **All five n
 
 | Repository | Referenced Purpose | Status (2026-03-28) |
 |-----------|-------------------|-------------------|
-| `Smooth115/Claude-MKII` | Creation and information — Python tooling | **🔴 404 — NOT FOUND** |
+| `Smooth115/Claude-MKII` | Creation and information — Python tooling | **✅ NOW PUBLIC** (was 404 at time of initial scan; made public by Lloyd on 2026-03-28) |
 | `Smooth115/Threat-2-the-shadow-dismantled-` | Shadow threat investigation & dismantling | **🔴 404 — NOT FOUND** |
 | `Smooth115/malware-invasion.-battle-of-the-rootkits` | Log collection around the 03:53 time window | **🔴 404 — NOT FOUND** |
 | `Smooth115/Smashers-HQ` | Ground Zero for the rebuild | **🔴 404 — NOT FOUND** |
 | `Smooth115/AgentHQ` | Agent definitions, creation, upgrades, version history | **🔴 404 — NOT FOUND** |
 
-**Only two repositories remain accessible:**
+**Three repositories are now accessible:**
 | Repository | Status |
 |-----------|--------|
 | `Smooth115/DATABASE` | ✅ Active (this repo) |
+| `Smooth115/Claude-MKII` | ✅ Active (made public 2026-03-28 — cross-referenced in Section 8) |
 | `Smooth115/Issue-3` | ✅ Active |
 
-**The Issue-3 repo** contains Lloyd's emergency lockdown order from **2026-03-23** (5 days ago) — issued after he noticed a "complete systematic breakdown of core security." That lockdown references `Smooth115/Claude-MKII Issue #3` as the source, but that repo is now gone.
+**The Issue-3 repo** contains Lloyd's emergency lockdown order from **2026-03-23** (5 days ago) — issued after he noticed a "complete systematic breakdown of core security." That lockdown references `Smooth115/Claude-MKII Issue #3` as the source: earlier in the investigation this repo was publicly accessible, but had returned 404 during initial scans before Lloyd made it public again on 2026-03-28.
 
-**This means:** The investigation's source repositories — containing the original evidence, tooling, and analysis — have been deleted or made inaccessible. The only surviving copy of the investigation data is what mk2-phantom pushed to this DATABASE repo in commit `6843cde`.
+**This means (as of the 2026-03-28 update):** Of the 5 original source repositories, only Claude-MKII has been restored. The other 4 — containing original evidence, tooling, and analysis — remain deleted or inaccessible. The surviving copies of investigation data are what mk2-phantom pushed to this DATABASE repo in commit `6843cde`, plus the now-public Claude-MKII repo.
 
 ---
 
