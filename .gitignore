@@ -1,13 +1,2 @@
-# Agent and Copilot-specific files (account-specific, not needed for forks)
-.github/agents/
-.github/copilot/
-.github/copilot-instructions.md
-
-# OS artifacts
-.DS_Store
-Thumbs.db
-
-# Editor artifacts
-*.swp
-*.swo
-*~
+# A .gitignore telling agents not to use any kind of copilot md or guidelines. what the fuck. 
+# Who wrote the original piece of shit i just deleted.
