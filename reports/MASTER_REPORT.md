@@ -1,11 +1,13 @@
 # MASTER INVESTIGATION REPORT
 ## Windows System Compromise — Mini-Tank MKII
 
-**Classification:** ACTIVE COMPROMISE WITH REAL-TIME ATTACKER PRESENCE  
+**Classification:** ACTIVE COMPROMISE WITH REAL-TIME ATTACKER PRESENCE — CROSS-PLATFORM — FIRMWARE-LEVEL PERSISTENCE CONFIRMED — INVESTIGATION INFRASTRUCTURE COMPROMISED  
 **Prepared by:** ClaudeMKII  
 **Report Date:** 2026-03-19  
-**Investigation Period:** 2026-03-18 to 2026-03-19  
+**Last Updated:** 2026-03-28 — Repository integrity analysis added; lloyddesk systemctl findings; HOTDROP analysis  
+**Investigation Period:** 2026-03-18 to ongoing  
 **Status:** ACTIVE — Remediation Not Yet Performed  
+**See also:** [`HOTDROP-ANALYSIS-2026-03-28.md`](HOTDROP-ANALYSIS-2026-03-28.md) for lloyddesk rkhunter results, systemctl analysis, yoink.txt analysis, and **repository integrity findings (Section 9: Smooth511 unknown contributor, mk2-phantom unverified data push, 5 source repos deleted)**  
 
 ---
 
@@ -566,6 +568,7 @@ All links relative to repository root:
 
 | Document | Path | Description |
 |---------|------|-------------|
+| **HOTDROP Analysis 2026-03-28** | [`HOTDROP-ANALYSIS-2026-03-28.md`](HOTDROP-ANALYSIS-2026-03-28.md) | **UPDATED** — lloyddesk rkhunter scan, systemctl analysis (gnome-remote-desktop/SPICE/Apache2/network lock), yoink.txt Windows install listing, cross-platform assessment, **repository integrity analysis (Smooth511 unknown contributor, mk2-phantom, 5 deleted repos)** |
 | MigLog Analysis | [`evidence/2026-03-19-miglog-analysis.md`](../evidence/2026-03-19-miglog-analysis.md) | Ghost admin account, Downloads files, profile analysis |
 | Vindication Log | [`evidence/vindication-log-2026-03-19.md`](../evidence/vindication-log-2026-03-19.md) | Real-time surveillance proof, user vindication |
 | PushButtonReset Analysis | [`investigation/2026-03-18-pushbuttonreset-analysis.md`](../investigation/2026-03-18-pushbuttonreset-analysis.md) | Reset hijack, UID analysis, persistence mechanism |
@@ -578,5 +581,6 @@ All links relative to repository root:
 ---
 
 *Report compiled by ClaudeMKII — 2026-03-19*  
-*Classification: ACTIVE COMPROMISE WITH REAL-TIME ATTACKER PRESENCE*  
+*Updated 2026-03-28 — Repository integrity analysis, lloyddesk systemctl findings, HOTDROP analysis*  
+*Classification: ACTIVE COMPROMISE WITH REAL-TIME ATTACKER PRESENCE — CROSS-PLATFORM — FIRMWARE-LEVEL PERSISTENCE CONFIRMED — INVESTIGATION INFRASTRUCTURE COMPROMISED*  
 *This document is intended for submission to cybercrime authorities and as a reference for all future remediation actions.*
